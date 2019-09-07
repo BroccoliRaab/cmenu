@@ -1,0 +1,15 @@
+Creates a ncurses menu from pipeline input. Outputs user's selection.
+
+Usage:
+
+cat options | cmenu
+
+Install:
+
+cd ./cmenu
+make
+sudo make install
+
+Uninstall:
+cd ./cmenu
+sudo make uninstall
