@@ -1,7 +1,7 @@
 OBJS := $(wildcard *.c) 
 OBJS := $(OBJS:.c=.o)   
 
-PREFIX ?= /usr
+PREFIX ?= /usr/local
 CFLAGS += -pedantic -Wall -flto -O2
 LDFLAGS += -flto -O2 
 LDLIBS += -lncurses
