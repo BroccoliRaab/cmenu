@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <curses.h>
 
@@ -86,7 +87,7 @@ void get_string(char ** buff_ptr, size_t * cap){
     char c;
     int chars_read = 0;
     char* buff = *buff_ptr;
-    while (c != EOF) {
+    do{
         c = getchar();
         chars_read++;
         if (*cap<=(chars_read-1)){
@@ -94,7 +95,7 @@ void get_string(char ** buff_ptr, size_t * cap){
             buff = realloc(buff, *cap);
         }
         buff[chars_read-1] = c;
-    }
+    } while (c != EOF);
     buff[chars_read] = '\0';
     *buff_ptr = buff;
 }
