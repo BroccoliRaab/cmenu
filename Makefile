@@ -1,5 +1,5 @@
-OBJS := $(wildcard *.c) 
-OBJS := $(OBJS:.c=.o)   
+SRC = cmenu.c
+OBJ = cmenu.o 
 
 PREFIX ?= /usr/local
 CFLAGS += -pedantic -Wall -flto -O2
@@ -7,14 +7,13 @@ LDFLAGS += -flto -O2
 LDLIBS += -lncurses
 
 PROGRAM := cmenu
-
-%.o: %.c %.h
-	$(CC) $(CFLAGS) -c -o $@ $<
-$(PROGRAM): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)  
+$(PROGRAM): $(OBJ)
+	$(CC) $(LDFLAGS) -o $@ $(OBJ) $(LDLIBS)  
+$(OBJ): $(SRC)
+	$(CC) $(CFLAGS) -c -o $(OBJ) $(SRC)
 clean:
-	rm -f $(OBJS) $(PROGRAM)
-install: cmenu
+	rm -f $(OBJ) $(PROGRAM)
+install: $(PROGRAM)
 	mkdir -p "$(PREFIX)/bin"
 	cp cmenu "$(PREFIX)/bin/$(PROGRAM)"
 uninstall:
