@@ -42,24 +42,21 @@ int read_lines(struct line_buffer *lb){
 }
 
 char * get_next_line (struct line_buffer *lb){
+	char * line = lb->current;
 	if (lb->current - lb->buffer >= lb->len){
-		printf("%p, %p, %lu\n", lb->current,lb->buffer , lb->len);
 		return NULL;
 	}
 	for (;*(lb->current) != '\0'; lb->current++);
 	lb->current ++;
-	return lb->current;
+	return line;
 }
 
 int main(){
 	struct line_buffer lb;
 	read_lines(&lb);
-	char * s = get_next_line(&lb);
-	if (s)
-		puts(get_next_line(&lb));
-	s = get_next_line(&lb);
-	if (s)
-		puts(get_next_line(&lb));
+	char * s;
+	while((s)=get_next_line(&lb))
+		puts(s);
 	free(lb.buffer);
 	return 0;
 }
