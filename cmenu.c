@@ -16,6 +16,21 @@ struct line_buffer {
 	size_t current_index;
 	wchar_t * buffer;
 };
+int read_lines(struct line_buffer *lb);
+wchar_t * get_next_line (struct line_buffer *lb);
+
+int main(){
+	struct line_buffer lb;
+	read_lines(&lb);
+	wchar_t * s;
+	while ((s=get_next_line(&lb))){
+		fputws(s, stdout);
+		fputwc(L'\n', stdout);
+	}
+	free(lb.buffer);
+	return 0;
+}
+
 int read_lines(struct line_buffer *lb){
 
 	lb->buffer = (wchar_t *) malloc( sizeof(wchar_t) * CHAR_BUFF_MIN);
@@ -52,16 +67,4 @@ wchar_t * get_next_line (struct line_buffer *lb){
 	for (;lb->buffer[lb->current_index] != '\0'; lb->current_index++);
 	lb->current_index++;
 	return line;
-}
-
-int main(){
-	struct line_buffer lb;
-	read_lines(&lb);
-	wchar_t * s;
-	while ((s=get_next_line(&lb))){
-		fputws(s, stdout);
-		fputwc(L'\n', stdout);
-	}
-	free(lb.buffer);
-	return 0;
 }
