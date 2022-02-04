@@ -2,9 +2,9 @@ SRC = cmenu.c
 OBJ = cmenu.o 
 
 PREFIX ?= /usr/local
-CFLAGS += -pedantic -Wall -flto -O2
+CFLAGS += -std=c99 -pedantic -Wall -Werror -flto -O2
 LDFLAGS += -flto -O2 
-LDLIBS += -lncurses
+LDLIBS += -lncursesw
 
 PROGRAM := cmenu
 $(PROGRAM): $(OBJ)
