@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <wchar.h>
 
 #define CHAR_BUFF_MIN 400
 #define ALLOC_CHECK(ptr)                               \
@@ -12,51 +13,55 @@ if ( (ptr) ==NULL){                                    \
 struct line_buffer {
 	size_t len;
 	size_t max;
-	char * buffer;
-	char * current;
+	size_t current_index;
+	wchar_t * buffer;
 };
 int read_lines(struct line_buffer *lb){
 
-	lb->buffer = (char *) malloc( sizeof(char) * CHAR_BUFF_MIN);
+	lb->buffer = (wchar_t *) malloc( sizeof(wchar_t) * CHAR_BUFF_MIN);
 	ALLOC_CHECK(lb->buffer);
 	lb->len = 0;
 	lb->max = CHAR_BUFF_MIN;
-	lb->current = lb->buffer;
-	int c;
-	do{
-		c= getchar();
-		if (lb->len >= lb->max){
-			void * new_buff = realloc(lb->buffer, lb->max * 2);
+	lb->current_index = 0;
+	wint_t c;
+
+	while ((c=getwchar())!=WEOF){
+		if (lb->len+1 >= lb->max){
+			void * new_buff = realloc(lb->buffer, lb->max * 2*sizeof(wchar_t));
 			if (new_buff){
-				lb->buffer = (char *) new_buff;
-				lb->current = lb->buffer;
+				lb->buffer = (wchar_t *) new_buff;
 				lb->max *= 2;
 			}
 			ALLOC_CHECK(new_buff);
 		}
-		c = c=='\n'?'\0':c;
-		lb->buffer[lb->len] = (char)c;
+		c = c==L'\n'?L'\0':c;
+		lb->buffer[lb->len] = (wchar_t)c;
 		lb->len++;
-	}while(c != EOF);
+	}
+	lb->buffer[lb->len] = L'\0';
+	lb->len++;
+
 	return 0;
 }
 
-char * get_next_line (struct line_buffer *lb){
-	char * line = lb->current;
-	if (lb->current - lb->buffer >= lb->len){
+wchar_t * get_next_line (struct line_buffer *lb){
+	wchar_t * line = lb->buffer + lb->current_index;
+	if (lb->current_index >= lb->len){
 		return NULL;
 	}
-	for (;*(lb->current) != '\0'; lb->current++);
-	lb->current++;
+	for (;lb->buffer[lb->current_index] != '\0'; lb->current_index++);
+	lb->current_index++;
 	return line;
 }
 
 int main(){
 	struct line_buffer lb;
 	read_lines(&lb);
-	char * s;
-	while((s=get_next_line(&lb)))
-		puts(s);
+	wchar_t * s;
+	while ((s=get_next_line(&lb))){
+		fputws(s, stdout);
+		fputwc(L'\n', stdout);
+	}
 	free(lb.buffer);
 	return 0;
 }
