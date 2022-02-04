@@ -47,7 +47,7 @@ char * get_next_line (struct line_buffer *lb){
 		return NULL;
 	}
 	for (;*(lb->current) != '\0'; lb->current++);
-	lb->current ++;
+	lb->current++;
 	return line;
 }
 
@@ -55,7 +55,7 @@ int main(){
 	struct line_buffer lb;
 	read_lines(&lb);
 	char * s;
-	while((s)=get_next_line(&lb))
+	while((s=get_next_line(&lb)))
 		puts(s);
 	free(lb.buffer);
 	return 0;
