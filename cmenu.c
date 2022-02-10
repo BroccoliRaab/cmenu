@@ -9,21 +9,16 @@
 #define CHAR_BUFF_MIN 400
 #define SEL_ATTR A_STANDOUT
 
-#define ALLOC_CHECK(ptr)                               \
-if ( (ptr) ==NULL){                                    \
-	fputs("Failed to allocate heap memory.\n", stderr); \
-	return -1;                                           \
-}                                                      \
-
 struct line_buffer {
 	size_t len;
 	size_t max;
 	size_t current_index;
 	wchar_t * buffer;
 };
+
 int read_lines(struct line_buffer *lb);
 wchar_t * get_next_line (struct line_buffer *lb);
-wchar_t * draw_lines(WINDOW * pad, struct line_buffer *lb, size_t sel_index);
+wchar_t * draw_lines(WINDOW * pad, struct line_buffer *lb, size_t sel_index, size_t n_items);
 
 int main(){
 	struct line_buffer lb;
@@ -34,21 +29,59 @@ int main(){
 	}
 
 	FILE *fd = fopen("/dev/tty", "r+");
-	newterm(NULL, fd, fd);
+	if (fd == NULL){
+		fputs( "Failed to open tty. Exiting\n", stderr);
+		free(lb.buffer);
+		return -1;
+	}
+
+	SCREEN * term = newterm(NULL, fd, fd);
+	if (term == NULL){
+		fputs( "Failed to make new term from tty. Exiting\n", stderr);
+		fclose(fd);
+		free(lb.buffer);
+		return -1;
+	}
 
 	cbreak();
 	keypad(stdscr, TRUE);
 	noecho();
 	curs_set(0);
+
 	int selection_index = 0;
 	int padline = 0;
 	int previous_padline = 0;
-	wchar_t * selection;
+	int result;
+	wchar_t * selection = L"";
 
 	WINDOW *main_pad = newpad(n_items, getmaxx(stdscr));
+	if (main_pad == NULL){
+		fputs( "Failed to initialize pad. Exiting\n", stderr);
+		endwin();
+		fclose(fd);
+		free(lb.buffer);
+		return -1;
+	}
 
-	selection = draw_lines(stdscr, &lb, selection_index);
-	prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
+	selection = draw_lines(stdscr, &lb, selection_index, n_items);
+	if (selection == NULL){
+		fputs( "Failed to draw to pad. Exiting\n", stderr);
+		delwin(main_pad);
+		endwin();
+		fclose(fd);
+		free(lb.buffer);
+		return -1;
+	}
+
+	result = prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
+	if (result == ERR){
+		fputs( "Failed to refresh pad. Exiting\n", stderr);
+		delwin(main_pad);
+		endwin();
+		fclose(fd);
+		free(lb.buffer);
+		return -1;
+	}
 
 	int input = 0;
 	while (input != '\n' && input != ' '){
@@ -72,26 +105,55 @@ int main(){
 		padline = (selection_index/getmaxy(stdscr))*getmaxy(stdscr);
 		if (padline != previous_padline){
 			clear();
-			refresh();
+			result = refresh();
+			if (result == ERR){
+				fputs( "Failed to refreshing screen. Exiting\n", stderr);
+				delwin(main_pad);
+				endwin();
+				fclose(fd);
+				free(lb.buffer);
+				return -1;
+			}
 			previous_padline = padline;
 		}
 
-		selection = draw_lines(main_pad, &lb, selection_index);
-		prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
+		selection = draw_lines(main_pad, &lb, selection_index, n_items);
+		if (selection == NULL){
+			fputs( "Failed to draw to pad. Exiting\n", stderr);
+			delwin(main_pad);
+			endwin();
+			fclose(fd);
+			free(lb.buffer);
+			return -1;
+		}
+		result = prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
+		if (result == ERR){
+			fputs( "Failed to refreshing pad. Exiting\n", stderr);
+			delwin(main_pad);
+			endwin();
+			fclose(fd);
+			free(lb.buffer);
+			return -1;
+		}
 	}
-	
-	delwin(main_pad);
-	endwin();
+
 	fputws(selection, stdout);
 	fputwc(L'\n', stdout);
+
+	delwin(main_pad);
+	endwin();
 	free(lb.buffer);
+	fclose(fd);
 	return 0;
 }
 
 int read_lines(struct line_buffer *lb){
 
 	lb->buffer = (wchar_t *) malloc( sizeof(wchar_t) * CHAR_BUFF_MIN);
-	ALLOC_CHECK(lb->buffer);
+	if (lb->buffer == NULL){
+		fputs("Failed to allocate buffer\n", stderr);
+		return -1;
+	}
 	lb->len = 0;
 	lb->max = CHAR_BUFF_MIN;
 	lb->current_index = 0;
@@ -104,8 +166,10 @@ int read_lines(struct line_buffer *lb){
 			if (new_buff){
 				lb->buffer = (wchar_t *) new_buff;
 				lb->max *= 2;
+			}else {
+				fputs("Failed to allocate buffer\n", stderr);
+				return -1;
 			}
-			ALLOC_CHECK(new_buff);
 		}
 		if (c == L'\n'){
 			c=L'\0';
@@ -131,11 +195,11 @@ wchar_t * get_next_line (struct line_buffer *lb){
 	return line;
 }
 
-wchar_t * draw_lines(WINDOW * w, struct line_buffer *lb, size_t sel_index){
+wchar_t * draw_lines(WINDOW * w, struct line_buffer *lb, size_t sel_index, size_t n_items){
 	wchar_t * selection;
 	wchar_t * line;
 	lb->current_index = 0;
-	for (size_t i = 0; (line = get_next_line(lb)) !=NULL; i++){
+	for (size_t i = 0; (line = get_next_line(lb)) !=NULL && i<n_items; i++){
 		if (i == sel_index){
 			wattron(w, SEL_ATTR);
 			selection = line;
