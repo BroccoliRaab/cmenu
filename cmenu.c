@@ -18,7 +18,7 @@ struct line_buffer {
 
 int read_lines(struct line_buffer *lb);
 wchar_t * get_next_line (struct line_buffer *lb);
-wchar_t * draw_lines(WINDOW * pad, struct line_buffer *lb, size_t sel_index, size_t n_items);
+wchar_t * draw_lines(WINDOW * pad, struct line_buffer *lb, size_t sel_index);
 
 int main(){
 	struct line_buffer lb;
@@ -63,7 +63,7 @@ int main(){
 		return -1;
 	}
 
-	selection = draw_lines(stdscr, &lb, selection_index, n_items);
+	selection = draw_lines(stdscr, &lb, selection_index);
 	if (selection == NULL){
 		fputs( "Failed to draw to pad. Exiting\n", stderr);
 		delwin(main_pad);
@@ -117,7 +117,7 @@ int main(){
 			previous_padline = padline;
 		}
 
-		selection = draw_lines(main_pad, &lb, selection_index, n_items);
+		selection = draw_lines(main_pad, &lb, selection_index);
 		if (selection == NULL){
 			fputs( "Failed to draw to pad. Exiting\n", stderr);
 			delwin(main_pad);
@@ -195,11 +195,11 @@ wchar_t * get_next_line (struct line_buffer *lb){
 	return line;
 }
 
-wchar_t * draw_lines(WINDOW * w, struct line_buffer *lb, size_t sel_index, size_t n_items){
+wchar_t * draw_lines(WINDOW * w, struct line_buffer *lb, size_t sel_index){
 	wchar_t * selection;
 	wchar_t * line;
 	lb->current_index = 0;
-	for (size_t i = 0; (line = get_next_line(lb)) !=NULL && i<n_items; i++){
+	for (size_t i = 0; (line = get_next_line(lb)) !=NULL; i++){
 		if (i == sel_index){
 			wattron(w, SEL_ATTR);
 			selection = line;
