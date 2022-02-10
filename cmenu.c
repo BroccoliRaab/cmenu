@@ -65,7 +65,7 @@ int main(){
 		}
 
 		selection_index = selection_index<0?0:selection_index;
-		selection_index = selection_index>getmaxy(stdscr)?getmaxy(stdscr):selection_index;
+		selection_index = selection_index>_items?n_items:selection_index;
 
 		padline = (selection_index/getmaxy(stdscr))*getmaxy(stdscr);
 		if (padline != previous_padline){
