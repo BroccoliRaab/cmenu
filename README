@@ -1,5 +1,13 @@
 Creates a ncurses menu from pipeline input. Outputs user's selection.
 
+V1.0 Changes:
+
+Don't call realloc on every character.
+
+Actually handle errors.
+
+Support Wide characters.
+
 Usage:
 
 cat options | cmenu
