@@ -43,11 +43,13 @@ int main(){
 	int selection_index = 0;
 	int padline = 0;
 	int previous_padline = 0;
+	wchar_t * selection;
 
 	WINDOW *main_pad = newpad(n_items, getmaxx(stdscr));
 
-	draw_lines(stdscr, &lb, selection_index);
+	selection = draw_lines(stdscr, &lb, selection_index);
 	prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
+
 	int input = 0;
 	while (input != '\n' && input != ' '){
 		input = getch();
@@ -74,12 +76,14 @@ int main(){
 			previous_padline = padline;
 		}
 
-		draw_lines(main_pad, &lb, selection_index);
+		selection = draw_lines(main_pad, &lb, selection_index);
 		prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
 	}
 	
 	delwin(main_pad);
 	endwin();
+	fputws(selection, stdout);
+	fputwc(L'\n', stdout);
 	free(lb.buffer);
 	return 0;
 }
