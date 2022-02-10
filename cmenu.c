@@ -63,12 +63,17 @@ int main(){
 				selection_index--;
 				break;
 		}
+
+		selection_index = selection_index<0?0:selection_index;
+		selection_index = selection_index>getmaxy(stdscr)?getmaxy(stdscr):selection_index;
+
 		padline = (selection_index/getmaxy(stdscr))*getmaxy(stdscr);
 		if (padline != previous_padline){
 			clear();
 			refresh();
 			previous_padline = padline;
 		}
+
 		draw_lines(main_pad, &lb, selection_index);
 		prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
 	}
