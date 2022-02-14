@@ -25,22 +25,19 @@ int main(){
 	int n_items = read_lines(&lb);
 	if (n_items<1){
 		fputs("Failed to read from stdin. Exiting.\n", stderr);
-		return 1;
+		goto ERR_EXIT;
 	}
 
 	FILE *fd = fopen("/dev/tty", "r+");
 	if (fd == NULL){
 		fputs( "Failed to open tty. Exiting\n", stderr);
-		free(lb.buffer);
-		return -1;
+		goto ERR_F;
 	}
 
 	SCREEN * term = newterm(NULL, fd, fd);
 	if (term == NULL){
 		fputs( "Failed to make new term from tty. Exiting\n", stderr);
-		fclose(fd);
-		free(lb.buffer);
-		return -1;
+		goto ERR_FB;
 	}
 
 	cbreak();
@@ -57,30 +54,19 @@ int main(){
 	WINDOW *main_pad = newpad(n_items, getmaxx(stdscr));
 	if (main_pad == NULL){
 		fputs( "Failed to initialize pad. Exiting\n", stderr);
-		endwin();
-		fclose(fd);
-		free(lb.buffer);
-		return -1;
+		goto ERR_FBW;
 	}
 
 	selection = draw_lines(stdscr, &lb, selection_index);
 	if (selection == NULL){
 		fputs( "Failed to draw to pad. Exiting\n", stderr);
-		delwin(main_pad);
-		endwin();
-		fclose(fd);
-		free(lb.buffer);
-		return -1;
+		goto ERR_FBWP;
 	}
 
 	result = prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
 	if (result == ERR){
 		fputs( "Failed to refresh pad. Exiting\n", stderr);
-		delwin(main_pad);
-		endwin();
-		fclose(fd);
-		free(lb.buffer);
-		return -1;
+		goto ERR_FBWP;
 	}
 
 	int input = 0;
@@ -108,11 +94,7 @@ int main(){
 			result = refresh();
 			if (result == ERR){
 				fputs( "Failed to refreshing screen. Exiting\n", stderr);
-				delwin(main_pad);
-				endwin();
-				fclose(fd);
-				free(lb.buffer);
-				return -1;
+				goto ERR_FBWP;
 			}
 			previous_padline = padline;
 		}
@@ -120,20 +102,12 @@ int main(){
 		selection = draw_lines(main_pad, &lb, selection_index);
 		if (selection == NULL){
 			fputs( "Failed to draw to pad. Exiting\n", stderr);
-			delwin(main_pad);
-			endwin();
-			fclose(fd);
-			free(lb.buffer);
-			return -1;
+			goto ERR_FBWP;
 		}
 		result = prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
 		if (result == ERR){
 			fputs( "Failed to refreshing pad. Exiting\n", stderr);
-			delwin(main_pad);
-			endwin();
-			fclose(fd);
-			free(lb.buffer);
-			return -1;
+			goto ERR_FBWP;
 		}
 	}
 
@@ -145,6 +119,17 @@ int main(){
 	free(lb.buffer);
 	fclose(fd);
 	return 0;
+
+ERR_FBWP:
+	delwin(main_pad);
+ERR_FBW:
+	endwin();
+ERR_FB:
+	free(lb.buffer);
+ERR_F:
+	fclose(fd);
+ERR_EXIT:
+	return -1;
 }
 
 int read_lines(struct line_buffer *lb){
