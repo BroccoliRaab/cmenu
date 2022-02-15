@@ -77,6 +77,8 @@ int main(){
 			case 'K':
 				selection_index--;
 				break;
+			default:
+				break;
 		}
 
 		selection_index = selection_index<0?0:selection_index;
