@@ -13,9 +13,9 @@ if ((VAL_A) == (VAL_B)){                            \
 }
 
 #define ERR_ASSERT_BLT(ERR_STR, VAL_A, VAL_B, LABEL) \
-if ((VAL_A) <= (VAL_B)){                     \
-	fputs(ERR_STR"\n",stderr);		            \
-	goto LABEL;	                              \
+if ((VAL_A) <= (VAL_B)){                             \
+	fputs(ERR_STR"\n",stderr);                        \
+	goto LABEL;                                       \
 }
 
 #define CHAR_BUFF_MIN 400
