@@ -6,6 +6,18 @@
 #define _XOPEN_SOURCE_EXTENDED
 #include <curses.h>
 
+#define ERR_ASSERT_BE(ERR_STR, VAL_A, VAL_B, LABEL) \
+if ((VAL_A) == (VAL_B)){                            \
+	fputs(ERR_STR"\n",stderr);                       \
+	goto LABEL;                                      \
+}
+
+#define ERR_ASSERT_BLT(ERR_STR, VAL_A, VAL_B, LABEL) \
+if ((VAL_A) <= (VAL_B)){                     \
+	fputs(ERR_STR"\n",stderr);		            \
+	goto LABEL;	                              \
+}
+
 #define CHAR_BUFF_MIN 400
 #define SEL_ATTR A_STANDOUT
 
@@ -23,22 +35,13 @@ wchar_t * draw_lines(WINDOW * pad, struct line_buffer *lb, size_t sel_index);
 int main(){
 	struct line_buffer lb;
 	int n_items = read_lines(&lb);
-	if (n_items<1){
-		fputs("Failed to read from stdin. Exiting.\n", stderr);
-		goto ERR_EXIT;
-	}
+	ERR_ASSERT_BLT("Failed to read from stdin. Exiting.", n_items, 1, ERR_EXIT); 
 
 	FILE *fd = fopen("/dev/tty", "r+");
-	if (fd == NULL){
-		fputs( "Failed to open tty. Exiting\n", stderr);
-		goto ERR_F;
-	}
+	ERR_ASSERT_BE("Failed to open tty Exiting.", fd, NULL, ERR_F); 
 
 	SCREEN * term = newterm(NULL, fd, fd);
-	if (term == NULL){
-		fputs( "Failed to make new term from tty. Exiting\n", stderr);
-		goto ERR_FB;
-	}
+	ERR_ASSERT_BE("Failed to make new term from tty. Exiting.", term, NULL, ERR_FB); 
 
 	cbreak();
 	keypad(stdscr, TRUE);
@@ -52,22 +55,13 @@ int main(){
 	wchar_t * selection = L"";
 
 	WINDOW *main_pad = newpad(n_items, getmaxx(stdscr));
-	if (main_pad == NULL){
-		fputs( "Failed to initialize pad. Exiting\n", stderr);
-		goto ERR_FBW;
-	}
+	ERR_ASSERT_BE("Failed to initialize pad. Exiting.", main_pad, NULL, ERR_FBW); 
 
 	selection = draw_lines(stdscr, &lb, selection_index);
-	if (selection == NULL){
-		fputs( "Failed to draw to pad. Exiting\n", stderr);
-		goto ERR_FBWP;
-	}
+	ERR_ASSERT_BE("Failed to draw to pad. Exiting.", selection, NULL, ERR_FBWP); 
 
 	result = prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
-	if (result == ERR){
-		fputs( "Failed to refresh pad. Exiting\n", stderr);
-		goto ERR_FBWP;
-	}
+	ERR_ASSERT_BE("Failed to refresh pad. Exiting.", result, ERR, ERR_FBWP); 
 
 	int input = 0;
 	while (input != '\n' && input != ' '){
@@ -92,23 +86,15 @@ int main(){
 		if (padline != previous_padline){
 			clear();
 			result = refresh();
-			if (result == ERR){
-				fputs( "Failed to refreshing screen. Exiting\n", stderr);
-				goto ERR_FBWP;
-			}
+			ERR_ASSERT_BE("Failed to refresh screen. Exiting.", result, ERR, ERR_FBWP); 
 			previous_padline = padline;
 		}
 
 		selection = draw_lines(main_pad, &lb, selection_index);
-		if (selection == NULL){
-			fputs( "Failed to draw to pad. Exiting\n", stderr);
-			goto ERR_FBWP;
-		}
+		ERR_ASSERT_BE("Failed to draw to pad. Exiting.", selection, NULL, ERR_FBWP); 
+
 		result = prefresh(main_pad, padline,0,0,0, getmaxy(stdscr)-1, getmaxx(stdscr)-1);
-		if (result == ERR){
-			fputs( "Failed to refreshing pad. Exiting\n", stderr);
-			goto ERR_FBWP;
-		}
+		ERR_ASSERT_BE("Failed to refresh screen. Exiting.", result, ERR, ERR_FBWP); 
 	}
 
 	fputws(selection, stdout);
