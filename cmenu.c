@@ -99,11 +99,13 @@ int main(){
 		ERR_ASSERT_BE("Failed to refresh screen. Exiting.", result, ERR, ERR_FBWP); 
 	}
 
+	endwin();
+
+    fflush(stdout);
 	fputws(selection, stdout);
 	fputwc(L'\n', stdout);
 
 	delwin(main_pad);
-	endwin();
 	free(lb.buffer);
 	fclose(fd);
 	return 0;
